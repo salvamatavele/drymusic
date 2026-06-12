@@ -13,6 +13,8 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 ENV BUILD_STANDALONE=1
 ENV NEXT_TELEMETRY_DISABLED=1
+# dummy só para o build (o adapter liga apenas em runtime, com o URL do compose)
+ENV DATABASE_URL="mysql://build:build@localhost:3306/build"
 RUN npx prisma generate && npm run build
 
 # ---------- runner: imagem final mínima ----------
