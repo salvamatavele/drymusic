@@ -1,0 +1,17 @@
+node_modules
+.next
+.git
+.gitignore
+media
+data
+generated
+.env
+.env.*
+*.md
+.claude
+.gemini
+.agent
+openspec
+Dockerfile
+docker-compose.yml
+.dockerignore

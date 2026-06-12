@@ -1,0 +1,80 @@
+name: drymusic
+
+services:
+  db:
+    image: mariadb:lts
+    restart: unless-stopped
+    command:
+      # tuning de performance para media library
+      - --innodb-buffer-pool-size=512M
+      - --innodb-flush-method=O_DIRECT
+      - --max-connections=200
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    environment:
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-drymusic_root}
+      MARIADB_DATABASE: drymusic
+      MARIADB_USER: drymusic
+      MARIADB_PASSWORD: ${DB_PASSWORD:-drymusic}
+    ports:
+      - "3331:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  # aplica as migrações Prisma antes de arrancar a app
+  migrate:
+    build:
+      context: .
+      target: builder
+    command: npx prisma migrate deploy
+    environment:
+      DATABASE_URL: mysql://drymusic:${DB_PASSWORD:-drymusic}@db:3306/drymusic
+    depends_on:
+      db:
+        condition: service_healthy
+
+  app:
+    build:
+      context: .
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: mysql://drymusic:${DB_PASSWORD:-drymusic}@db:3306/drymusic
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-drymusic}
+      SESSION_SECRET: ${SESSION_SECRET:-troca-este-segredo-em-producao-3f9a1c2b4d6e8f0a}
+    ports:
+      - "3031:3000"
+    volumes:
+      - media:/app/media
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "wget", "-qO/dev/null", "http://127.0.0.1:3000/login"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  phpmyadmin:
+    image: phpmyadmin:latest
+    restart: unless-stopped
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+      UPLOAD_LIMIT: 256M
+    ports:
+      - "8031:80"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  db_data:
+  media:

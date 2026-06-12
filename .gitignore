@@ -20,6 +20,10 @@
 # production
 /build
 
+# drymusic
+/media/
+/generated/
+
 # misc
 .DS_Store
 *.pem

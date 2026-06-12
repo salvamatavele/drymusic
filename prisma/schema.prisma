@@ -1,0 +1,102 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+enum MediaType {
+  MUSIC
+  VIDEO
+}
+
+model Artist {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  image     String?
+  media     Media[]
+  albums    Album[]
+  createdAt DateTime @default(now())
+}
+
+model Album {
+  id        String   @id @default(uuid())
+  title     String
+  year      Int?
+  cover     String?
+  artistId  String?
+  artist    Artist?  @relation(fields: [artistId], references: [id], onDelete: SetNull)
+  media     Media[]
+  createdAt DateTime @default(now())
+
+  @@unique([title, artistId])
+}
+
+model Media {
+  id            String         @id @default(uuid())
+  type          MediaType
+  title         String
+  artistId      String?
+  artist        Artist?        @relation(fields: [artistId], references: [id], onDelete: SetNull)
+  albumId       String?
+  album         Album?         @relation(fields: [albumId], references: [id], onDelete: SetNull)
+  duration      Float?
+  filename      String
+  mime          String
+  size          BigInt
+  cover         String?
+  playCount     Int            @default(0)
+  lastPlayed    DateTime?
+  createdAt     DateTime       @default(now())
+  playlistItems PlaylistItem[]
+  history       PlayHistory[]
+  likes         Like[]
+
+  @@index([type])
+  @@index([createdAt])
+}
+
+model Like {
+  visitorId String
+  mediaId   String
+  media     Media    @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@id([visitorId, mediaId])
+  @@index([visitorId])
+}
+
+model Playlist {
+  id          String         @id @default(uuid())
+  visitorId   String?
+  name        String
+  description String?
+  cover       String?
+  items       PlaylistItem[]
+  createdAt   DateTime       @default(now())
+
+  @@index([visitorId])
+}
+
+model PlaylistItem {
+  playlistId String
+  mediaId    String
+  position   Int
+  playlist   Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+  media      Media    @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+
+  @@id([playlistId, mediaId])
+}
+
+model PlayHistory {
+  id        String   @id @default(uuid())
+  visitorId String?
+  mediaId   String
+  media     Media    @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+  playedAt  DateTime @default(now())
+
+  @@index([playedAt])
+  @@index([visitorId])
+}
