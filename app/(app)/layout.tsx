@@ -6,6 +6,8 @@ import PlayerBar from "@/components/PlayerBar";
 import QueuePanel from "@/components/QueuePanel";
 import Sidebar from "@/components/Sidebar";
 import MobileNav from "@/components/MobileNav";
+import MobileMenu from "@/components/MobileMenu";
+import InstallPrompt from "@/components/InstallPrompt";
 
 export default async function AppLayout({
   children,
@@ -19,12 +21,15 @@ export default async function AppLayout({
 
   return (
     <PlayerProvider>
-      <div className="grid h-dvh grid-rows-[1fr_auto]">
-        <div className="flex min-h-0">
+      <div className="grid h-dvh grid-cols-1 grid-rows-[1fr_auto]">
+        <div className="flex min-h-0 min-w-0">
           <Sidebar isAdmin={isAdmin} />
-          <main className="min-w-0 flex-1 overflow-y-auto p-4 pb-8 md:p-6">
-            {children}
-          </main>
+          <div className="flex min-w-0 flex-1 flex-col">
+            <MobileMenu isAdmin={isAdmin} />
+            <main className="min-w-0 flex-1 overflow-y-auto p-4 pb-8 md:p-6">
+              {children}
+            </main>
+          </div>
         </div>
         <div>
           <PlayerBar />
@@ -33,6 +38,7 @@ export default async function AppLayout({
       </div>
       <QueuePanel />
       <ExpandedPlayer />
+      <InstallPrompt />
     </PlayerProvider>
   );
 }

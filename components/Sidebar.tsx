@@ -2,42 +2,8 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import {
-  ArrowDownToLine,
-  Clock,
-  Disc3,
-  Heart,
-  Home,
-  ListMusic,
-  LogOut,
-  MicVocal,
-  Music2,
-  Search,
-  Settings,
-  Upload,
-  Video,
-} from "lucide-react";
-
-const mainLinks = [
-  { href: "/", label: "Início", icon: Home },
-  { href: "/search", label: "Pesquisar", icon: Search },
-];
-
-const libraryLinks = [
-  { href: "/music", label: "Músicas", icon: Music2 },
-  { href: "/videos", label: "Vídeos", icon: Video },
-  { href: "/artists", label: "Artistas", icon: MicVocal },
-  { href: "/albums", label: "Álbuns", icon: Disc3 },
-  { href: "/playlists", label: "Playlists", icon: ListMusic },
-  { href: "/liked", label: "Favoritos", icon: Heart },
-  { href: "/history", label: "Histórico", icon: Clock },
-  { href: "/downloads", label: "Downloads", icon: ArrowDownToLine },
-];
-
-const adminLinks = [
-  { href: "/admin/upload", label: "Upload", icon: Upload },
-  { href: "/admin", label: "Gerir biblioteca", icon: Settings },
-];
+import { Home, LogOut, Music2, Settings } from "lucide-react";
+import { adminLinks, libraryLinks, mainLinks } from "@/components/nav-links";
 
 type SidebarProps = { isAdmin: boolean };
 
