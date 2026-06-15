@@ -5,6 +5,7 @@ import TrackList from "@/components/TrackList";
 import PlayAllButton from "@/components/PlayAllButton";
 
 export const dynamic = "force-dynamic";
+export const metadata = { title: "Músicas" };
 
 export default async function MusicPage() {
   const [music, likedSet] = await Promise.all([

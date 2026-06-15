@@ -4,6 +4,7 @@ import { getLikedSet, getVisitorId } from "@/lib/visitor";
 import MediaGrid from "@/components/MediaGrid";
 
 export const dynamic = "force-dynamic";
+export const metadata = { title: "Vídeos" };
 
 export default async function VideosPage() {
   const [videos, likedSet] = await Promise.all([

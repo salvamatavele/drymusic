@@ -1,0 +1,83 @@
+name: CI & Deploy
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+# cancela execuções antigas do mesmo ref (ex.: pushes seguidos)
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    name: Lint, Typecheck & Build
+    runs-on: ubuntu-latest
+    env:
+      # URL dummy só para o build (o adapter liga apenas em runtime)
+      DATABASE_URL: mysql://build:build@localhost:3306/build
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma Client
+        run: npx prisma generate
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npx tsc --noEmit
+
+      - name: Build
+        run: npm run build
+
+  deploy:
+    name: Deploy to CloudPanel
+    needs: ci
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Executando Deploy via SSH no CloudPanel
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            # Carrega as configurações do utilizador (onde o Node/NPM estão definidos)
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+
+            # 1. Navegar para a pasta do projeto
+            cd /home/${{ secrets.SSH_USER }}/htdocs/stream.7spes.com
+
+            # 2. Atualizar o código (token automático do GitHub para o pull)
+            git pull https://${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git main
+
+            # 3. Instalar dependências
+            npm ci
+
+            # 4. Gerar o Prisma Client (gitignored) e aplicar migrações
+            npx prisma generate
+            npx prisma migrate deploy
+
+            # 5. Build de produção
+            npm run build
+
+            # 6. Reiniciar a aplicação no PM2
+            pm2 restart stream --update-env

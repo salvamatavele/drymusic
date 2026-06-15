@@ -3,6 +3,7 @@ import { MicVocal } from "lucide-react";
 import { prisma } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
+export const metadata = { title: "Artistas" };
 
 export default async function ArtistsPage() {
   const artists = await prisma.artist.findMany({

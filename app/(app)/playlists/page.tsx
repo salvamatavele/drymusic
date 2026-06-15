@@ -4,6 +4,7 @@ import { getVisitorId } from "@/lib/visitor";
 import PlaylistsClient from "@/components/PlaylistsClient";
 
 export const dynamic = "force-dynamic";
+export const metadata = { title: "Playlists" };
 
 export default async function PlaylistsPage() {
   const visitorId = await getVisitorId();

@@ -4,6 +4,7 @@ import { getLikedSet, getVisitorId } from "@/lib/visitor";
 import TrackList from "@/components/TrackList";
 
 export const dynamic = "force-dynamic";
+export const metadata = { title: "Histórico" };
 
 export default async function HistoryPage() {
   const visitorId = await getVisitorId();

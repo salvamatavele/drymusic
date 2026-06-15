@@ -6,6 +6,7 @@ import TrackList from "@/components/TrackList";
 import PlayAllButton from "@/components/PlayAllButton";
 
 export const dynamic = "force-dynamic";
+export const metadata = { title: "Favoritos" };
 
 export default async function LikedPage() {
   const visitorId = await getVisitorId();

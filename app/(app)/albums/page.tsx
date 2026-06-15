@@ -3,6 +3,7 @@ import { Disc3 } from "lucide-react";
 import { prisma } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
+export const metadata = { title: "Álbuns" };
 
 export default async function AlbumsPage() {
   const albums = await prisma.album.findMany({

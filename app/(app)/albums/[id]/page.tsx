@@ -8,6 +8,24 @@ import PlayAllButton from "@/components/PlayAllButton";
 
 export const dynamic = "force-dynamic";
 
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  const album = await prisma.album.findUnique({
+    where: { id },
+    include: { artist: true },
+  });
+  if (!album) return { title: "Álbum" };
+  return {
+    title: album.artist ? `${album.title} — ${album.artist.name}` : album.title,
+    description: `Ouve o álbum ${album.title} no DryMusic.`,
+    alternates: { canonical: `/albums/${id}` },
+  };
+}
+
 export default async function AlbumPage({
   params,
 }: {

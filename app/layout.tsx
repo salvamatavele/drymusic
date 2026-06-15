@@ -8,10 +8,55 @@ const geistSans = Geist({
   subsets: ["latin"],
 });
 
+const siteUrl =
+  process.env.NEXT_PUBLIC_SITE_URL ?? "https://stream.7spes.com";
+
+const description =
+  "DryMusic — ouve músicas e assiste vídeos em streaming, cria as tuas playlists, marca favoritos e descarrega para ouvir offline. App instalável (PWA).";
+
 export const metadata: Metadata = {
-  title: "DryMusic",
-  description: "A tua biblioteca privada de música e vídeos",
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: "DryMusic — Música e vídeos em streaming",
+    template: "%s · DryMusic",
+  },
+  description,
   applicationName: "DryMusic",
+  keywords: [
+    "música",
+    "vídeos",
+    "streaming",
+    "playlists",
+    "offline",
+    "PWA",
+    "DryMusic",
+  ],
+  authors: [{ name: "DryMusic" }],
+  category: "music",
+  alternates: { canonical: "/" },
+  openGraph: {
+    type: "website",
+    siteName: "DryMusic",
+    title: "DryMusic — Música e vídeos em streaming",
+    description,
+    url: siteUrl,
+    locale: "pt_BR",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "DryMusic — Música e vídeos em streaming",
+    description,
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",

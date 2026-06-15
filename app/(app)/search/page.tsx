@@ -7,6 +7,7 @@ import MediaGrid from "@/components/MediaGrid";
 import SearchInput from "@/components/SearchInput";
 
 export const dynamic = "force-dynamic";
+export const metadata = { title: "Pesquisar" };
 
 export default async function SearchPage({
   searchParams,
