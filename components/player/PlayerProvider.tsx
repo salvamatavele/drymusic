@@ -14,6 +14,8 @@ import { streamUrl, coverUrl } from "@/lib/serialize";
 
 export type RepeatMode = "off" | "all" | "one";
 
+const PLAYER_STORAGE_KEY = "drymusic:player";
+
 type PlayerState = {
   current: MediaDTO | null;
   queue: MediaDTO[];
@@ -75,6 +77,9 @@ export default function PlayerProvider({
 }) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const baseQueue = useRef<MediaDTO[]>([]);
+  // posição a aplicar quando os metadados da faixa restaurada carregarem
+  const pendingSeekRef = useRef<number | null>(null);
+  const restoredRef = useRef(false);
 
   const [queue, setQueue] = useState<MediaDTO[]>([]);
   const [index, setIndex] = useState(0);
@@ -96,23 +101,29 @@ export default function PlayerProvider({
     stateRef.current = { queue, index, repeat };
   }, [queue, index, repeat]);
 
-  const loadAndPlay = useCallback((item: MediaDTO) => {
-    const el = videoRef.current;
-    if (!el) return;
-    el.src = streamUrl(item.id);
-    el.play().catch(() => setIsPlaying(false));
-    fetch(`/api/media/${item.id}/played`, { method: "POST" }).catch(() => {});
-    if ("mediaSession" in navigator) {
-      navigator.mediaSession.metadata = new MediaMetadata({
-        title: item.title,
-        artist: item.artistName ?? "",
-        album: item.albumTitle ?? "",
-        artwork: item.hasCover
-          ? [{ src: coverUrl(item.id), sizes: "512x512" }]
-          : [],
-      });
-    }
+  const setSessionMetadata = useCallback((item: MediaDTO) => {
+    if (!("mediaSession" in navigator)) return;
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: item.title,
+      artist: item.artistName ?? "",
+      album: item.albumTitle ?? "",
+      artwork: item.hasCover
+        ? [{ src: coverUrl(item.id), sizes: "512x512" }]
+        : [],
+    });
   }, []);
+
+  const loadAndPlay = useCallback(
+    (item: MediaDTO) => {
+      const el = videoRef.current;
+      if (!el) return;
+      el.src = streamUrl(item.id);
+      el.play().catch(() => setIsPlaying(false));
+      fetch(`/api/media/${item.id}/played`, { method: "POST" }).catch(() => {});
+      setSessionMetadata(item);
+    },
+    [setSessionMetadata],
+  );
 
   const play = useCallback(
     (item: MediaDTO, newQueue?: MediaDTO[]) => {
@@ -266,7 +277,18 @@ export default function PlayerProvider({
     const onPlay = () => setIsPlaying(true);
     const onPause = () => setIsPlaying(false);
     const onTime = () => setCurrentTime(el.currentTime);
-    const onDuration = () => setDuration(el.duration || 0);
+    const onDuration = () => {
+      setDuration(el.duration || 0);
+      // aplica a posição guardada após restaurar a faixa
+      if (pendingSeekRef.current != null) {
+        try {
+          el.currentTime = pendingSeekRef.current;
+        } catch {
+          // ignora se ainda não for possível
+        }
+        pendingSeekRef.current = null;
+      }
+    };
     const onEnded = () => {
       if (stateRef.current.repeat === "one") {
         el.currentTime = 0;
@@ -314,6 +336,91 @@ export default function PlayerProvider({
       ms.setActionHandler("seekto", null);
     };
   }, [prev, next, seek]);
+
+  // ── Persistência: retomar a reprodução após reload ──
+  // Restaura a fila/posição ao montar (faixa carregada na posição guardada;
+  // o áudio pode ficar em pausa se o browser bloquear autoplay com som).
+  useEffect(() => {
+    if (restoredRef.current) return;
+    restoredRef.current = true;
+    let saved: {
+      queue?: MediaDTO[];
+      baseQueue?: MediaDTO[];
+      index?: number;
+      currentTime?: number;
+      volume?: number;
+      rate?: number;
+      shuffle?: boolean;
+      repeat?: RepeatMode;
+    } | null = null;
+    try {
+      saved = JSON.parse(localStorage.getItem(PLAYER_STORAGE_KEY) || "null");
+    } catch {
+      saved = null;
+    }
+    if (!saved?.queue?.length) return;
+    const session = saved;
+
+    const raf = requestAnimationFrame(() => {
+      const q = session.queue!;
+      const idx = Math.min(Math.max(session.index ?? 0, 0), q.length - 1);
+      const item = q[idx];
+      baseQueue.current = session.baseQueue?.length ? session.baseQueue : q;
+      setQueue(q);
+      setIndex(idx);
+      if (typeof session.volume === "number") setVolume(session.volume);
+      if (typeof session.rate === "number") setRate(session.rate);
+      if (session.shuffle) setShuffle(true);
+      if (session.repeat) setRepeat(session.repeat);
+
+      const el = videoRef.current;
+      if (el && item) {
+        el.src = streamUrl(item.id);
+        pendingSeekRef.current = session.currentTime ?? 0;
+        setCurrentTime(session.currentTime ?? 0);
+        setDuration(item.duration ?? 0);
+        setSessionMetadata(item);
+        // tenta retomar; se o autoplay com som for bloqueado, fica em pausa
+        el.play().catch(() => {});
+      }
+    });
+    return () => cancelAnimationFrame(raf);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Guarda o estado periodicamente e imediatamente antes de sair/recarregar.
+  const persistRef = useRef({ queue, index, volume, rate, shuffle, repeat });
+  useEffect(() => {
+    persistRef.current = { queue, index, volume, rate, shuffle, repeat };
+  }, [queue, index, volume, rate, shuffle, repeat]);
+
+  useEffect(() => {
+    const save = () => {
+      const s = persistRef.current;
+      if (!s.queue.length) return;
+      try {
+        localStorage.setItem(
+          PLAYER_STORAGE_KEY,
+          JSON.stringify({
+            ...s,
+            baseQueue: baseQueue.current,
+            currentTime: videoRef.current?.currentTime ?? 0,
+          }),
+        );
+      } catch {
+        // localStorage cheio/indisponível — ignora
+      }
+    };
+    const interval = setInterval(save, 5000);
+    document.addEventListener("visibilitychange", save);
+    window.addEventListener("pagehide", save);
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener("visibilitychange", save);
+      window.removeEventListener("pagehide", save);
+      save();
+    };
+  }, []);
 
   const api = useMemo<PlayerApi>(
     () => ({
