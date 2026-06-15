@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  ChevronUp,
   ListMusic,
   Maximize2,
   Pause,
@@ -180,7 +181,22 @@ export default function PlayerBar() {
           </button>
         </div>
 
-        {/* Mobile: play/pause compacto já incluído no centro */}
+        {/* Mobile: favoritar + expandir (acesso ao player completo) */}
+        <div className="flex shrink-0 items-center gap-3 sm:hidden">
+          <LikeButton
+            key={`m-${item.id}-${item.liked}`}
+            id={item.id}
+            liked={item.liked}
+            onChange={(liked) => p.updateCurrent({ liked })}
+          />
+          <button
+            onClick={p.expand}
+            title="Abrir player"
+            className="text-muted hover:text-white transition"
+          >
+            <ChevronUp className="size-6" />
+          </button>
+        </div>
       </div>
 
       {/* Seek mobile */}

@@ -10,7 +10,7 @@ export default function QueuePanel() {
   if (!p.queueOpen) return null;
 
   return (
-    <aside className="fixed bottom-24 right-2 z-30 flex max-h-[60vh] w-80 max-w-[95vw] flex-col rounded-xl border border-border bg-surface shadow-2xl">
+    <aside className="fixed inset-x-2 bottom-2 z-[60] flex max-h-[60vh] flex-col rounded-xl border border-border bg-surface shadow-2xl md:inset-x-auto md:bottom-24 md:right-2 md:w-80">
       <div className="flex items-center justify-between border-b border-border p-3">
         <h3 className="text-sm font-bold">Fila de reprodução</h3>
         <div className="flex items-center gap-2">

@@ -1,13 +1,23 @@
 import Link from "next/link";
 import { Disc3 } from "lucide-react";
 import { prisma } from "@/lib/db";
+import CollectionCover from "@/components/CollectionCover";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Álbuns" };
 
 export default async function AlbumsPage() {
   const albums = await prisma.album.findMany({
-    include: { artist: true, _count: { select: { media: true } } },
+    include: {
+      artist: true,
+      _count: { select: { media: true } },
+      media: {
+        where: { cover: { not: null } },
+        select: { id: true },
+        orderBy: { createdAt: "asc" },
+        take: 1,
+      },
+    },
     orderBy: { createdAt: "desc" },
   });
 
@@ -24,9 +34,12 @@ export default async function AlbumsPage() {
             href={`/albums/${al.id}`}
             className="group flex flex-col gap-3 rounded-lg bg-surface p-3 transition hover:bg-elevated"
           >
-            <span className="flex aspect-square w-full items-center justify-center rounded-md bg-elevated text-muted group-hover:text-white transition">
-              <Disc3 className="size-12" />
-            </span>
+            <CollectionCover
+              mediaId={al.media[0]?.id ?? null}
+              icon={Disc3}
+              alt={al.title}
+              className="aspect-square w-full rounded-md"
+            />
             <div className="min-w-0">
               <p className="truncate text-sm font-semibold">{al.title}</p>
               <p className="truncate text-xs text-muted">

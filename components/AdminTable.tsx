@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Check, ImagePlus, Pencil, Trash2, X } from "lucide-react";
 import type { MediaDTO } from "@/lib/serialize";
 import Cover from "@/components/Cover";
+import SuggestionDatalists from "@/components/SuggestionDatalists";
 import { formatBytes, formatTime } from "@/lib/format";
 
 export default function AdminTable({ items }: { items: MediaDTO[] }) {
@@ -55,6 +56,7 @@ export default function AdminTable({ items }: { items: MediaDTO[] }) {
 
   return (
     <div className="overflow-x-auto rounded-lg border border-border">
+      <SuggestionDatalists />
       <table className="w-full text-left text-sm">
         <thead className="bg-surface text-xs uppercase text-muted">
           <tr>
@@ -108,6 +110,7 @@ export default function AdminTable({ items }: { items: MediaDTO[] }) {
                     <input
                       value={form.artist}
                       onChange={(e) => setForm({ ...form, artist: e.target.value })}
+                      list="artist-suggestions"
                       className="w-full rounded bg-elevated px-2 py-1 outline-none"
                     />
                   </td>
@@ -115,6 +118,7 @@ export default function AdminTable({ items }: { items: MediaDTO[] }) {
                     <input
                       value={form.album}
                       onChange={(e) => setForm({ ...form, album: e.target.value })}
+                      list="album-suggestions"
                       className="w-full rounded bg-elevated px-2 py-1 outline-none"
                     />
                   </td>

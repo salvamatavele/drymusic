@@ -22,8 +22,10 @@ export async function GET(request: Request, { params }: Ctx) {
   if (!playlist) {
     return Response.json({ error: "Não encontrada" }, { status: 404 });
   }
+  const coverMediaId =
+    playlist.items.find((i) => i.media.cover != null)?.mediaId ?? null;
   return Response.json({
-    ...toPlaylistDTO(playlist),
+    ...toPlaylistDTO(playlist, coverMediaId),
     items: playlist.items.map((i) => toMediaDTO(i.media, likedSet)),
   });
 }

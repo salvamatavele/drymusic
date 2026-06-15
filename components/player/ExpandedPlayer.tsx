@@ -1,10 +1,23 @@
 "use client";
 
-import { ChevronDown, Pause, Play, SkipBack, SkipForward } from "lucide-react";
+import {
+  ChevronDown,
+  ListMusic,
+  Pause,
+  Play,
+  Repeat,
+  Repeat1,
+  Shuffle,
+  SkipBack,
+  SkipForward,
+  Volume2,
+  VolumeX,
+} from "lucide-react";
 import { usePlayer } from "@/components/player/PlayerProvider";
 import Cover from "@/components/Cover";
 import LikeButton from "@/components/LikeButton";
 import DownloadButton from "@/components/DownloadButton";
+import AddToPlaylistMenu from "@/components/AddToPlaylistMenu";
 import { formatTime } from "@/lib/format";
 
 export default function ExpandedPlayer() {
@@ -33,6 +46,7 @@ export default function ExpandedPlayer() {
             onChange={(liked) => p.updateCurrent({ liked })}
           />
           <DownloadButton item={item} />
+          <AddToPlaylistMenu item={item} />
         </div>
       </div>
 
@@ -71,23 +85,88 @@ export default function ExpandedPlayer() {
           />
           <span className="w-10 tabular-nums">{formatTime(p.duration)}</span>
         </div>
-        <div className="mt-4 flex items-center justify-center gap-8">
+
+        {/* Controlos principais */}
+        <div className="mt-4 flex items-center justify-center gap-7">
+          <button
+            onClick={p.toggleShuffle}
+            title="Aleatório"
+            className={`transition ${p.shuffle ? "text-accent" : "text-muted hover:text-white"}`}
+          >
+            <Shuffle className="size-6" />
+          </button>
           <button onClick={p.prev} className="text-muted hover:text-white transition">
             <SkipBack className="size-7 fill-current" />
           </button>
           <button
             onClick={p.toggle}
-            className="flex size-14 items-center justify-center rounded-full bg-white text-black hover:scale-105 transition"
+            className="flex size-16 items-center justify-center rounded-full bg-white text-black hover:scale-105 transition"
           >
             {p.isPlaying ? (
-              <Pause className="size-6 fill-current" />
+              <Pause className="size-7 fill-current" />
             ) : (
-              <Play className="size-6 fill-current translate-x-[2px]" />
+              <Play className="size-7 fill-current translate-x-[2px]" />
             )}
           </button>
           <button onClick={p.next} className="text-muted hover:text-white transition">
             <SkipForward className="size-7 fill-current" />
           </button>
+          <button
+            onClick={p.cycleRepeat}
+            title={`Repetir: ${p.repeat}`}
+            className={`transition ${p.repeat !== "off" ? "text-accent" : "text-muted hover:text-white"}`}
+          >
+            {p.repeat === "one" ? (
+              <Repeat1 className="size-6" />
+            ) : (
+              <Repeat className="size-6" />
+            )}
+          </button>
+        </div>
+
+        {/* Ações secundárias: fila, volume, velocidade */}
+        <div className="mt-6 flex items-center justify-center gap-5">
+          <button
+            onClick={p.toggleQueue}
+            title="Fila"
+            className={`transition ${p.queueOpen ? "text-accent" : "text-muted hover:text-white"}`}
+          >
+            <ListMusic className="size-5" />
+          </button>
+          <button
+            onClick={() => p.setVolume(p.volume > 0 ? 0 : 1)}
+            title="Silenciar"
+            className="text-muted hover:text-white transition"
+          >
+            {p.volume === 0 ? (
+              <VolumeX className="size-5" />
+            ) : (
+              <Volume2 className="size-5" />
+            )}
+          </button>
+          <input
+            type="range"
+            min={0}
+            max={1}
+            step={0.05}
+            value={p.volume}
+            onChange={(e) => p.setVolume(Number(e.target.value))}
+            className="h-1 w-32 cursor-pointer"
+          />
+          {isVideo && (
+            <select
+              value={p.rate}
+              onChange={(e) => p.setRate(Number(e.target.value))}
+              title="Velocidade"
+              className="rounded bg-elevated px-2 py-1 text-xs text-muted outline-none"
+            >
+              {[0.5, 0.75, 1, 1.25, 1.5, 2].map((r) => (
+                <option key={r} value={r}>
+                  {r}x
+                </option>
+              ))}
+            </select>
+          )}
         </div>
       </div>
     </div>

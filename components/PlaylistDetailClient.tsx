@@ -6,6 +6,7 @@ import { ListMusic, Pencil, Trash2 } from "lucide-react";
 import type { MediaDTO, PlaylistDTO } from "@/lib/serialize";
 import TrackList from "@/components/TrackList";
 import PlayAllButton from "@/components/PlayAllButton";
+import CollectionCover from "@/components/CollectionCover";
 
 export default function PlaylistDetailClient({
   playlist,
@@ -60,9 +61,12 @@ export default function PlaylistDetailClient({
   return (
     <div className="flex flex-col gap-6">
       <header className="flex items-end gap-5 rounded-xl bg-gradient-to-b from-sky-900/60 to-transparent p-6">
-        <span className="flex size-28 items-center justify-center rounded-lg bg-elevated shadow-2xl md:size-36">
-          <ListMusic className="size-12 text-muted" />
-        </span>
+        <CollectionCover
+          mediaId={items.find((i) => i.hasCover)?.id ?? null}
+          icon={ListMusic}
+          alt={name}
+          className="size-28 rounded-lg shadow-2xl md:size-36"
+        />
         <div className="min-w-0">
           <p className="text-xs font-bold uppercase tracking-wider">Playlist</p>
           <h1 className="truncate text-3xl font-extrabold md:text-5xl">{name}</h1>

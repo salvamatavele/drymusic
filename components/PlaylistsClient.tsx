@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ListMusic, Plus } from "lucide-react";
 import type { PlaylistDTO } from "@/lib/serialize";
+import CollectionCover from "@/components/CollectionCover";
 
 export default function PlaylistsClient({
   initial,
@@ -55,9 +56,12 @@ export default function PlaylistsClient({
             href={`/playlists/${pl.id}`}
             className="group flex flex-col gap-3 rounded-lg bg-surface p-3 transition hover:bg-elevated"
           >
-            <span className="flex aspect-square w-full items-center justify-center rounded-md bg-elevated text-muted group-hover:text-white transition">
-              <ListMusic className="size-12" />
-            </span>
+            <CollectionCover
+              mediaId={pl.coverMediaId}
+              icon={ListMusic}
+              alt={pl.name}
+              className="aspect-square w-full rounded-md"
+            />
             <div className="min-w-0">
               <p className="truncate text-sm font-semibold">{pl.name}</p>
               <p className="text-xs text-muted">{pl.itemCount} itens</p>

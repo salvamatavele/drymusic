@@ -22,6 +22,7 @@ export type PlaylistDTO = {
   name: string;
   description: string | null;
   hasCover: boolean;
+  coverMediaId: string | null;
   itemCount: number;
   createdAt: string;
 };
@@ -55,12 +56,14 @@ export function toMediaDTO(
 
 export function toPlaylistDTO(
   p: Playlist & { _count?: { items: number } },
+  coverMediaId: string | null = null,
 ): PlaylistDTO {
   return {
     id: p.id,
     name: p.name,
     description: p.description,
     hasCover: p.cover != null,
+    coverMediaId,
     itemCount: p._count?.items ?? 0,
     createdAt: p.createdAt.toISOString(),
   };

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { CheckCircle2, Loader2, UploadCloud, XCircle } from "lucide-react";
+import SuggestionDatalists from "@/components/SuggestionDatalists";
 
 type FileJob = {
   file: File;
@@ -136,6 +137,7 @@ export default function UploadForm() {
 
   return (
     <div className="flex max-w-3xl flex-col gap-6">
+      <SuggestionDatalists />
       <label className="flex cursor-pointer flex-col items-center gap-3 rounded-xl border-2 border-dashed border-border bg-surface p-10 text-center transition hover:border-accent">
         <UploadCloud className="size-10 text-muted" />
         <span className="font-semibold">
@@ -204,6 +206,7 @@ export default function UploadForm() {
                     value={job.artist}
                     onChange={(e) => updateJob(i, { artist: e.target.value })}
                     placeholder="Artista"
+                    list="artist-suggestions"
                     disabled={job.status === "uploading" || job.status === "done"}
                     className="rounded bg-elevated px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-accent"
                   />
@@ -211,6 +214,7 @@ export default function UploadForm() {
                     value={job.album}
                     onChange={(e) => updateJob(i, { album: e.target.value })}
                     placeholder="Álbum (só música)"
+                    list="album-suggestions"
                     disabled={job.status === "uploading" || job.status === "done"}
                     className="rounded bg-elevated px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-accent"
                   />

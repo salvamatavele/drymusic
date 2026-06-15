@@ -6,10 +6,20 @@ export async function GET() {
   const visitorId = await getVisitorId();
   const playlists = await prisma.playlist.findMany({
     where: { visitorId: visitorId || "-" },
-    include: { _count: { select: { items: true } } },
+    include: {
+      _count: { select: { items: true } },
+      items: {
+        where: { media: { cover: { not: null } } },
+        orderBy: { position: "asc" },
+        take: 1,
+        select: { mediaId: true },
+      },
+    },
     orderBy: { createdAt: "desc" },
   });
-  return Response.json(playlists.map(toPlaylistDTO));
+  return Response.json(
+    playlists.map((p) => toPlaylistDTO(p, p.items[0]?.mediaId ?? null)),
+  );
 }
 
 export async function POST(request: Request) {
