@@ -3,13 +3,14 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { LogOut, Menu, Music2, Settings, X } from "lucide-react";
+import { LogOut, Menu, Settings, X } from "lucide-react";
 import {
   adminLinks,
   libraryLinks,
   mainLinks,
   type NavLink,
 } from "@/components/nav-links";
+import Logo from "@/components/Logo";
 
 type Props = { isAdmin: boolean };
 
@@ -53,9 +54,7 @@ export default function MobileMenu({ isAdmin }: Props) {
           <Menu className="size-6" />
         </button>
         <Link href="/" className="flex items-center gap-2">
-          <span className="flex size-7 items-center justify-center rounded-full bg-accent text-black">
-            <Music2 className="size-4" />
-          </span>
+          <Logo className="size-7 rounded-md" />
           <span className="font-bold">DryMusic</span>
         </Link>
       </header>
@@ -70,9 +69,7 @@ export default function MobileMenu({ isAdmin }: Props) {
           <nav className="absolute left-0 top-0 flex h-full w-72 max-w-[80vw] flex-col gap-1 overflow-y-auto bg-surface p-3">
             <div className="mb-2 flex items-center justify-between px-1 py-2">
               <span className="flex items-center gap-2">
-                <span className="flex size-8 items-center justify-center rounded-full bg-accent text-black">
-                  <Music2 className="size-5" />
-                </span>
+                <Logo className="size-8 rounded-md" />
                 <span className="text-lg font-bold">DryMusic</span>
               </span>
               <button

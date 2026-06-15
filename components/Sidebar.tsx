@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Home, LogOut, Music2, Settings } from "lucide-react";
+import { Home, LogOut, Settings } from "lucide-react";
 import { adminLinks, libraryLinks, mainLinks } from "@/components/nav-links";
+import Logo from "@/components/Logo";
 
 type SidebarProps = { isAdmin: boolean };
 
@@ -58,9 +59,7 @@ export default function Sidebar({ isAdmin }: SidebarProps) {
   return (
     <nav className="hidden h-full w-64 flex-col gap-2 overflow-y-auto bg-surface p-3 md:flex">
       <Link href="/" className="flex items-center gap-2 px-3 py-3">
-        <span className="flex size-9 items-center justify-center rounded-full bg-accent text-black">
-          <Music2 className="size-5" />
-        </span>
+        <Logo className="size-9 rounded-lg" />
         <span className="text-lg font-bold">DryMusic</span>
       </Link>
 

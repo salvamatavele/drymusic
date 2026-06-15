@@ -2,7 +2,7 @@
 
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Music2 } from "lucide-react";
+import Logo from "@/components/Logo";
 
 function LoginForm() {
   const router = useRouter();
@@ -36,9 +36,7 @@ function LoginForm() {
       className="w-full max-w-sm rounded-2xl bg-surface p-8 flex flex-col gap-6"
     >
       <div className="flex flex-col items-center gap-3">
-        <span className="flex size-14 items-center justify-center rounded-full bg-accent text-black">
-          <Music2 className="size-7" />
-        </span>
+        <Logo className="size-16 rounded-2xl" />
         <h1 className="text-2xl font-bold">DryMusic</h1>
         <p className="text-sm text-muted">A tua biblioteca privada</p>
       </div>
