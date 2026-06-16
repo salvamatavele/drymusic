@@ -7,6 +7,7 @@ import Cover from "@/components/Cover";
 import LikeButton from "@/components/LikeButton";
 import DownloadButton from "@/components/DownloadButton";
 import AddToPlaylistMenu from "@/components/AddToPlaylistMenu";
+import ShareButton from "@/components/ShareButton";
 import { formatTime } from "@/lib/format";
 
 export default function TrackList({
@@ -77,6 +78,11 @@ export default function TrackList({
             >
               <LikeButton id={item.id} liked={item.liked} />
               <DownloadButton item={item} />
+              <ShareButton
+                title={item.title}
+                text={`${item.title}${item.artistName ? ` — ${item.artistName}` : ""}`}
+                path={`/watch/${item.id}`}
+              />
               <AddToPlaylistMenu item={item} />
               {onRemove && (
                 <button

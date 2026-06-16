@@ -18,6 +18,7 @@ import Cover from "@/components/Cover";
 import LikeButton from "@/components/LikeButton";
 import DownloadButton from "@/components/DownloadButton";
 import AddToPlaylistMenu from "@/components/AddToPlaylistMenu";
+import ShareButton from "@/components/ShareButton";
 import { formatTime } from "@/lib/format";
 
 export default function ExpandedPlayer() {
@@ -46,6 +47,11 @@ export default function ExpandedPlayer() {
             onChange={(liked) => p.updateCurrent({ liked })}
           />
           <DownloadButton item={item} />
+          <ShareButton
+            title={item.title}
+            text={`${item.title}${item.artistName ? ` — ${item.artistName}` : ""}`}
+            path={`/watch/${item.id}`}
+          />
           <AddToPlaylistMenu item={item} />
         </div>
       </div>

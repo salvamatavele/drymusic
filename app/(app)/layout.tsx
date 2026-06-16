@@ -24,7 +24,7 @@ export default async function AppLayout({
       <div className="grid h-dvh grid-cols-1 grid-rows-[1fr_auto]">
         <div className="flex min-h-0 min-w-0">
           <Sidebar isAdmin={isAdmin} />
-          <div className="flex min-w-0 flex-1 flex-col">
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col">
             <MobileMenu isAdmin={isAdmin} />
             <main className="min-w-0 flex-1 overflow-y-auto p-4 pb-8 md:p-6">
               {children}

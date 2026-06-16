@@ -44,8 +44,8 @@ export default function MobileMenu({ isAdmin }: Props) {
 
   return (
     <>
-      {/* Barra superior — só mobile */}
-      <header className="flex items-center gap-3 border-b border-border bg-surface px-4 py-3 md:hidden">
+      {/* Barra superior — só mobile, fixa no topo */}
+      <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-border bg-surface px-4 py-3 md:hidden">
         <button
           onClick={() => setOpen(true)}
           aria-label="Abrir menu"

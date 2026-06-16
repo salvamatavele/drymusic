@@ -4,6 +4,7 @@ import {
   Disc3,
   Heart,
   Home,
+  Info,
   ListMusic,
   MicVocal,
   Music2,
@@ -19,6 +20,7 @@ export type NavLink = { href: string; label: string; icon: LucideIcon };
 export const mainLinks: NavLink[] = [
   { href: "/", label: "Início", icon: Home },
   { href: "/search", label: "Pesquisar", icon: Search },
+  { href: "/about", label: "Sobre", icon: Info },
 ];
 
 export const libraryLinks: NavLink[] = [
