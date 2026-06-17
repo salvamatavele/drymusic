@@ -76,10 +76,21 @@ export default function PlayerProvider({
   children: React.ReactNode;
 }) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  // elemento <audio> dedicado para música — continua a tocar em segundo
+  // plano/ecrã bloqueado (os <video> são pausados pelos browsers móveis).
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  // elemento atualmente em uso (áudio p/ música, vídeo p/ vídeo)
+  const activeElRef = useRef<HTMLMediaElement | null>(null);
+  const volumeRef = useRef(1);
+  const rateRef = useRef(1);
+  const lastPosSync = useRef(0);
   const baseQueue = useRef<MediaDTO[]>([]);
   // posição a aplicar quando os metadados da faixa restaurada carregarem
   const pendingSeekRef = useRef<number | null>(null);
   const restoredRef = useRef(false);
+
+  const elementFor = (item: MediaDTO) =>
+    item.type === "VIDEO" ? videoRef.current : audioRef.current;
 
   const [queue, setQueue] = useState<MediaDTO[]>([]);
   const [index, setIndex] = useState(0);
@@ -108,15 +119,51 @@ export default function PlayerProvider({
       artist: item.artistName ?? "",
       album: item.albumTitle ?? "",
       artwork: item.hasCover
-        ? [{ src: coverUrl(item.id), sizes: "512x512" }]
+        ? [
+            { src: coverUrl(item.id), sizes: "256x256", type: "image/jpeg" },
+            { src: coverUrl(item.id), sizes: "512x512", type: "image/jpeg" },
+          ]
         : [],
     });
   }, []);
 
+  // Mantém o scrubber do ecrã bloqueado sincronizado e a sessão "viva".
+  const syncPositionState = useCallback((force = false) => {
+    if (
+      !("mediaSession" in navigator) ||
+      !("setPositionState" in navigator.mediaSession)
+    )
+      return;
+    const el = activeElRef.current;
+    if (!el || !isFinite(el.duration) || el.duration <= 0) return;
+    const now = Date.now();
+    if (!force && now - lastPosSync.current < 1000) return;
+    lastPosSync.current = now;
+    try {
+      navigator.mediaSession.setPositionState({
+        duration: el.duration,
+        playbackRate: el.playbackRate || 1,
+        position: Math.min(Math.max(el.currentTime, 0), el.duration),
+      });
+    } catch {
+      // valores inválidos durante transições — ignora
+    }
+  }, []);
+
   const loadAndPlay = useCallback(
     (item: MediaDTO) => {
-      const el = videoRef.current;
+      const el = elementFor(item);
       if (!el) return;
+      // pausa/limpa o outro elemento para não haver dois a tocar
+      const other = item.type === "VIDEO" ? audioRef.current : videoRef.current;
+      activeElRef.current = el;
+      if (other && other !== el) {
+        other.pause();
+        other.removeAttribute("src");
+        other.load();
+      }
+      el.volume = volumeRef.current;
+      el.playbackRate = item.type === "VIDEO" ? rateRef.current : 1;
       el.src = streamUrl(item.id);
       el.play().catch(() => setIsPlaying(false));
       fetch(`/api/media/${item.id}/played`, { method: "POST" }).catch(() => {});
@@ -158,13 +205,13 @@ export default function PlayerProvider({
     } else if (r === "all") {
       jumpTo(0);
     } else {
-      videoRef.current?.pause();
+      activeElRef.current?.pause();
       setIsPlaying(false);
     }
   }, [jumpTo]);
 
   const prev = useCallback(() => {
-    const el = videoRef.current;
+    const el = activeElRef.current;
     const { index: i } = stateRef.current;
     if (el && (el.currentTime > 3 || i === 0)) {
       el.currentTime = 0;
@@ -174,26 +221,27 @@ export default function PlayerProvider({
   }, [jumpTo]);
 
   const toggle = useCallback(() => {
-    const el = videoRef.current;
+    const el = activeElRef.current;
     if (!el || !el.src) return;
     if (el.paused) el.play().catch(() => {});
     else el.pause();
   }, []);
 
   const seek = useCallback((t: number) => {
-    const el = videoRef.current;
+    const el = activeElRef.current;
     if (el) el.currentTime = t;
   }, []);
 
   const setVolume = useCallback((v: number) => {
-    const el = videoRef.current;
-    if (el) el.volume = v;
+    volumeRef.current = v;
+    if (videoRef.current) videoRef.current.volume = v;
+    if (audioRef.current) audioRef.current.volume = v;
     setVolumeState(v);
   }, []);
 
   const setRate = useCallback((r: number) => {
-    const el = videoRef.current;
-    if (el) el.playbackRate = r;
+    rateRef.current = r;
+    if (activeElRef.current) activeElRef.current.playbackRate = r;
     setRateState(r);
   }, []);
 
@@ -270,70 +318,133 @@ export default function PlayerProvider({
   const collapse = useCallback(() => setExpanded(false), []);
   const toggleQueue = useCallback(() => setQueueOpen((o) => !o), []);
 
-  // listeners do elemento de media
+  // listeners — ligados a AMBOS os elementos (áudio e vídeo); ignoram eventos
+  // do elemento inativo via guarda contra activeElRef.
   useEffect(() => {
-    const el = videoRef.current;
-    if (!el) return;
-    const onPlay = () => setIsPlaying(true);
-    const onPause = () => setIsPlaying(false);
-    const onTime = () => setCurrentTime(el.currentTime);
-    const onDuration = () => {
-      setDuration(el.duration || 0);
-      // aplica a posição guardada após restaurar a faixa
-      if (pendingSeekRef.current != null) {
-        try {
-          el.currentTime = pendingSeekRef.current;
-        } catch {
-          // ignora se ainda não for possível
+    const els = [videoRef.current, audioRef.current].filter(
+      Boolean,
+    ) as HTMLMediaElement[];
+    const setPlaybackState = (s: MediaSessionPlaybackState) => {
+      if ("mediaSession" in navigator) navigator.mediaSession.playbackState = s;
+    };
+    const cleanups: Array<() => void> = [];
+
+    for (const el of els) {
+      const active = () => el === activeElRef.current;
+      const onPlay = () => {
+        if (!active()) return;
+        setIsPlaying(true);
+        setPlaybackState("playing");
+        syncPositionState(true);
+      };
+      const onPause = () => {
+        if (!active()) return;
+        setIsPlaying(false);
+        setPlaybackState("paused");
+      };
+      const onTime = () => {
+        if (!active()) return;
+        setCurrentTime(el.currentTime);
+        syncPositionState(false);
+      };
+      const onDuration = () => {
+        if (!active()) return;
+        setDuration(el.duration || 0);
+        if (pendingSeekRef.current != null) {
+          try {
+            el.currentTime = pendingSeekRef.current;
+          } catch {
+            // ignora se ainda não for possível
+          }
+          pendingSeekRef.current = null;
         }
-        pendingSeekRef.current = null;
-      }
-    };
-    const onEnded = () => {
-      if (stateRef.current.repeat === "one") {
-        el.currentTime = 0;
-        el.play().catch(() => {});
-      } else {
+        syncPositionState(true);
+      };
+      const onEnded = () => {
+        if (!active()) return;
+        if (stateRef.current.repeat === "one") {
+          el.currentTime = 0;
+          el.play().catch(() => {});
+        } else {
+          next();
+        }
+      };
+      const onError = () => {
+        if (!active()) return;
         next();
-      }
-    };
-    const onError = () => next();
+      };
+      const onRate = () => {
+        if (!active()) return;
+        syncPositionState(true);
+      };
 
-    el.addEventListener("play", onPlay);
-    el.addEventListener("pause", onPause);
-    el.addEventListener("timeupdate", onTime);
-    el.addEventListener("loadedmetadata", onDuration);
-    el.addEventListener("durationchange", onDuration);
-    el.addEventListener("ended", onEnded);
-    el.addEventListener("error", onError);
-    return () => {
-      el.removeEventListener("play", onPlay);
-      el.removeEventListener("pause", onPause);
-      el.removeEventListener("timeupdate", onTime);
-      el.removeEventListener("loadedmetadata", onDuration);
-      el.removeEventListener("durationchange", onDuration);
-      el.removeEventListener("ended", onEnded);
-      el.removeEventListener("error", onError);
-    };
-  }, [next]);
+      el.addEventListener("play", onPlay);
+      el.addEventListener("pause", onPause);
+      el.addEventListener("timeupdate", onTime);
+      el.addEventListener("loadedmetadata", onDuration);
+      el.addEventListener("durationchange", onDuration);
+      el.addEventListener("ratechange", onRate);
+      el.addEventListener("seeked", onRate);
+      el.addEventListener("ended", onEnded);
+      el.addEventListener("error", onError);
+      cleanups.push(() => {
+        el.removeEventListener("play", onPlay);
+        el.removeEventListener("pause", onPause);
+        el.removeEventListener("timeupdate", onTime);
+        el.removeEventListener("loadedmetadata", onDuration);
+        el.removeEventListener("durationchange", onDuration);
+        el.removeEventListener("ratechange", onRate);
+        el.removeEventListener("seeked", onRate);
+        el.removeEventListener("ended", onEnded);
+        el.removeEventListener("error", onError);
+      });
+    }
+    return () => cleanups.forEach((c) => c());
+  }, [next, syncPositionState]);
 
-  // Media Session actions
+  // Media Session actions (controlos do ecrã bloqueado / notificação)
   useEffect(() => {
     if (!("mediaSession" in navigator)) return;
     const ms = navigator.mediaSession;
-    ms.setActionHandler("play", () => videoRef.current?.play());
-    ms.setActionHandler("pause", () => videoRef.current?.pause());
-    ms.setActionHandler("previoustrack", prev);
-    ms.setActionHandler("nexttrack", next);
-    ms.setActionHandler("seekto", (e) => {
+    const set = (
+      action: MediaSessionAction,
+      handler: MediaSessionActionHandler | null,
+    ) => {
+      try {
+        ms.setActionHandler(action, handler);
+      } catch {
+        // ação não suportada neste browser — ignora
+      }
+    };
+    set("play", () => activeElRef.current?.play());
+    set("pause", () => activeElRef.current?.pause());
+    set("previoustrack", () => prev());
+    set("nexttrack", () => next());
+    set("seekto", (e) => {
       if (e.seekTime != null) seek(e.seekTime);
     });
+    set("seekbackward", (e) =>
+      seek(
+        Math.max(0, (activeElRef.current?.currentTime ?? 0) - (e.seekOffset ?? 10)),
+      ),
+    );
+    set("seekforward", (e) =>
+      seek((activeElRef.current?.currentTime ?? 0) + (e.seekOffset ?? 10)),
+    );
+    set("stop", () => activeElRef.current?.pause());
     return () => {
-      ms.setActionHandler("play", null);
-      ms.setActionHandler("pause", null);
-      ms.setActionHandler("previoustrack", null);
-      ms.setActionHandler("nexttrack", null);
-      ms.setActionHandler("seekto", null);
+      for (const a of [
+        "play",
+        "pause",
+        "previoustrack",
+        "nexttrack",
+        "seekto",
+        "seekbackward",
+        "seekforward",
+        "stop",
+      ] as MediaSessionAction[]) {
+        set(a, null);
+      }
     };
   }, [prev, next, seek]);
 
@@ -373,8 +484,11 @@ export default function PlayerProvider({
       if (session.shuffle) setShuffle(true);
       if (session.repeat) setRepeat(session.repeat);
 
-      const el = videoRef.current;
+      const el = item ? elementFor(item) : null;
       if (el && item) {
+        activeElRef.current = el;
+        el.volume = volumeRef.current;
+        el.playbackRate = item.type === "VIDEO" ? rateRef.current : 1;
         el.src = streamUrl(item.id);
         pendingSeekRef.current = session.currentTime ?? 0;
         setCurrentTime(session.currentTime ?? 0);
@@ -404,7 +518,7 @@ export default function PlayerProvider({
           JSON.stringify({
             ...s,
             baseQueue: baseQueue.current,
-            currentTime: videoRef.current?.currentTime ?? 0,
+            currentTime: activeElRef.current?.currentTime ?? 0,
           }),
         );
       } catch {
@@ -519,6 +633,8 @@ export default function PlayerProvider({
           onClick={expanded ? undefined : expand}
         />
       </div>
+      {/* elemento de áudio persistente para música (continua em background) */}
+      <audio ref={audioRef} preload="auto" />
     </PlayerContext.Provider>
   );
 }
