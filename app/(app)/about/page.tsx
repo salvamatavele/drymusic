@@ -1,5 +1,6 @@
 import {
   ArrowDownToLine,
+  HandHeart,
   Heart,
   ListMusic,
   Music2,
@@ -11,6 +12,10 @@ import Logo from "@/components/Logo";
 import ShareButton from "@/components/ShareButton";
 
 export const metadata = { title: "Sobre" };
+
+const donateUrl =
+  process.env.NEXT_PUBLIC_DONATE_URL ??
+  "mailto:smatavele1@gmail.com?subject=Apoiar%20o%20DryMusic";
 
 const features = [
   { icon: Music2, title: "Música e vídeos", text: "Ouve e assiste à tua biblioteca em streaming." },
@@ -56,6 +61,30 @@ export default function AboutPage() {
             </div>
           </div>
         ))}
+      </section>
+
+      <section className="flex flex-col items-center gap-4 rounded-2xl border border-accent/30 bg-gradient-to-b from-accent/15 to-surface p-6 text-center">
+        <span className="flex size-14 items-center justify-center rounded-full bg-accent text-black">
+          <HandHeart className="size-7" />
+        </span>
+        <div>
+          <h2 className="text-xl font-bold">Apoia o DryMusic 💚</h2>
+          <p className="mx-auto mt-2 max-w-md text-sm text-muted">
+            Este é um projeto independente, feito com dedicação. Se gostas e
+            queres ajudar a melhorá-lo e a fazê-lo crescer, considera uma
+            doação — qualquer valor faz a diferença e é totalmente opcional.
+            Obrigado por fazeres parte! 🙏
+          </p>
+        </div>
+        <a
+          href={donateUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-2 rounded-full bg-accent px-6 py-2 font-bold text-black hover:bg-accent-hover transition"
+        >
+          <HandHeart className="size-5" />
+          Fazer uma doação
+        </a>
       </section>
 
       <footer className="flex items-center justify-center gap-2 text-sm text-muted">
