@@ -1,5 +1,6 @@
 import {
   ArrowDownToLine,
+  BarChart3,
   Clock,
   Disc3,
   Heart,
@@ -37,4 +38,5 @@ export const libraryLinks: NavLink[] = [
 export const adminLinks: NavLink[] = [
   { href: "/admin/upload", label: "Upload", icon: Upload },
   { href: "/admin", label: "Gerir biblioteca", icon: Settings },
+  { href: "/admin/analytics", label: "Analytics", icon: BarChart3 },
 ];

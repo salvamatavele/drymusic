@@ -100,3 +100,15 @@ model PlayHistory {
   @@index([playedAt])
   @@index([visitorId])
 }
+
+/// Eventos de analytics: visitas (acessos) e downloads.
+model Event {
+  id        String   @id @default(uuid())
+  type      String // "visit" | "download" | "install"
+  visitorId String?
+  mediaId   String?
+  createdAt DateTime @default(now())
+
+  @@index([type])
+  @@index([createdAt])
+}

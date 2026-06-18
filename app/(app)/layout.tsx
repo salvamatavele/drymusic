@@ -8,6 +8,7 @@ import Sidebar from "@/components/Sidebar";
 import MobileNav from "@/components/MobileNav";
 import MobileMenu from "@/components/MobileMenu";
 import InstallPrompt from "@/components/InstallPrompt";
+import AnalyticsTracker from "@/components/AnalyticsTracker";
 
 export default async function AppLayout({
   children,
@@ -39,6 +40,7 @@ export default async function AppLayout({
       <QueuePanel />
       <ExpandedPlayer />
       <InstallPrompt />
+      <AnalyticsTracker />
     </PlayerProvider>
   );
 }

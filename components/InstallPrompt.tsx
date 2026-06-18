@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Download, Share, Smartphone, SquarePlus, X } from "lucide-react";
 import Logo from "@/components/Logo";
+import { track } from "@/lib/track";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -65,6 +66,7 @@ export default function InstallPrompt() {
     };
     const onInstalled = () => {
       save("installed");
+      track("install");
       setShow(false);
       setEvt(null);
     };
@@ -121,6 +123,7 @@ export default function InstallPrompt() {
   }
 
   function installApk() {
+    track("apk");
     save("installed");
     window.open(APK_URL, "_blank", "noopener,noreferrer");
     setShow(false);

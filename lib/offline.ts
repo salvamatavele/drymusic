@@ -2,6 +2,7 @@
 
 import type { MediaDTO } from "@/lib/serialize";
 import { streamUrl, coverUrl } from "@/lib/serialize";
+import { track } from "@/lib/track";
 
 const MEDIA_CACHE = "media-v1";
 const LS_KEY = "drymusic:downloads";
@@ -46,6 +47,7 @@ export async function addDownload(item: MediaDTO): Promise<void> {
   const entries = listDownloads().filter((d) => d.id !== item.id);
   entries.unshift({ ...item, downloadedAt: new Date().toISOString() });
   saveDownloads(entries);
+  track("download", item.id);
 }
 
 export async function removeDownload(id: string): Promise<void> {
