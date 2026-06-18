@@ -11,6 +11,7 @@ import {
   type NavLink,
 } from "@/components/nav-links";
 import Logo from "@/components/Logo";
+import InstallButton from "@/components/InstallButton";
 
 type Props = { isAdmin: boolean };
 
@@ -57,6 +58,7 @@ export default function MobileMenu({ isAdmin }: Props) {
           <Logo className="size-7 rounded-md" />
           <span className="font-bold">DryMusic</span>
         </Link>
+        <InstallButton className="ml-auto" />
       </header>
 
       {/* Drawer */}

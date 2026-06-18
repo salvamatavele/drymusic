@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { Home, LogOut, Settings } from "lucide-react";
 import { adminLinks, libraryLinks, mainLinks } from "@/components/nav-links";
 import Logo from "@/components/Logo";
+import InstallButton from "@/components/InstallButton";
 
 type SidebarProps = { isAdmin: boolean };
 
@@ -58,10 +59,13 @@ export default function Sidebar({ isAdmin }: SidebarProps) {
 
   return (
     <nav className="hidden h-full w-64 flex-col gap-2 overflow-y-auto bg-surface p-3 md:flex">
-      <Link href="/" className="flex items-center gap-2 px-3 py-3">
-        <Logo className="size-9 rounded-lg" />
-        <span className="text-lg font-bold">DryMusic</span>
-      </Link>
+      <div className="flex items-center gap-2 px-3 py-3">
+        <Link href="/" className="flex flex-1 items-center gap-2">
+          <Logo className="size-9 rounded-lg" />
+          <span className="text-lg font-bold">DryMusic</span>
+        </Link>
+        <InstallButton />
+      </div>
 
       <div className="flex flex-col gap-1">
         {mainLinks.map((l) => (
